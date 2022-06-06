@@ -92,6 +92,16 @@ class TemplateBasedExpansionStrategy(ExpansionStrategy):
 
         self._logger.info(f"Loading templates from {templatefile} to {self.key}")
         self.templates: pd.DataFrame = pd.read_hdf(templatefile, "table")
+        encoded_template = []
+        i = 0
+        for index, row in self.templates.iterrows():
+            if i % 1000 == 0:
+                print(i)
+            reaction = rdc.rdchiralReaction(row['retro_template'])
+            encoded_template.append(reaction)
+            i += 1
+        self.templates['reaction'] = encoded_template
+        self.predictions_saved = pd.DataFrame(columns=['SMILES', 'ID', 'Probability'])
 
         if hasattr(self.model, "output_size") and len(self.templates) != self.model.output_size:  # type: ignore
             raise PolicyException(
@@ -117,10 +127,16 @@ class TemplateBasedExpansionStrategy(ExpansionStrategy):
             model = self.model
             templates = self.templates
 
-            all_transforms_prop = self._predict(mol, model)
-            probable_transforms_idx = self._cutoff_predictions(all_transforms_prop)
-            possible_moves = templates.iloc[probable_transforms_idx]
-            probs = all_transforms_prop[probable_transforms_idx]
+            if mol.smiles in self.predictions_saved['SMILES'].values:
+                probable_transforms_idx = self.predictions_saved['ID'].to_numpy()[self.predictions_saved['SMILES'].to_numpy() == mol.smiles].item()
+                probs = self.predictions_saved['Probability'].to_numpy()[self.predictions_saved['SMILES'].to_numpy() == mol.smiles].item()
+                possible_moves = templates.iloc[probable_transforms_idx]
+            else:  
+                all_transforms_prop = self._predict(mol, model)
+                probable_transforms_idx = self._cutoff_predictions(all_transforms_prop)
+                possible_moves = templates.iloc[probable_transforms_idx]
+                probs = all_transforms_prop[probable_transforms_idx]
+                self.predictions_saved.loc[len(self.predictions_saved.index)] = [mol.smiles, probable_transforms_idx, probs] 
 
             priors.extend(probs)
             for idx, (move_index, move) in enumerate(possible_moves.iterrows()):
@@ -137,6 +153,7 @@ class TemplateBasedExpansionStrategy(ExpansionStrategy):
                         smarts=move[self._config.template_column],
                         metadata=metadata,
                         use_rdchiral=self._config.use_rdchiral,
+                        rdc_rxn=move['rdc_rxn'],
                     )
                 )
         return possible_actions, priors  # type: ignore
