@@ -321,6 +321,7 @@ class TemplatedRetroReaction(RetroReaction):
         self, mol: TreeMolecule, index: int = 0, metadata: StrDict = None, **kwargs: Any
     ):
         super().__init__(mol, index, metadata, **kwargs)
+        self.rdc_rxn = kwargs["rdc_rxn"]
         self.smarts: str = kwargs["smarts"]
         self._use_rdchiral: bool = kwargs.get("use_rdchiral", True)
         self._rd_reaction: Optional[RdReaction] = None
@@ -362,8 +363,8 @@ class TemplatedRetroReaction(RetroReaction):
         Apply a reactions smarts to a molecule and return the products (reactants for retro templates)
         Will try to sanitize the reactants, and if that fails it will not return that molecule
         """
-        reaction = rdc.rdchiralReaction(self.smarts)
-        rct = rdc.rdchiralReactants(self.mol.smiles)
+        reaction = self.rdc_rxn
+        rct = self.mol.rdc_rct
         try:
             reactants = rdc.rdchiralRun(reaction, rct)
         except RuntimeError as err:
