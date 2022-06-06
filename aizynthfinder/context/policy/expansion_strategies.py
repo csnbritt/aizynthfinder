@@ -7,6 +7,8 @@ from typing import TYPE_CHECKING
 import numpy as np
 import pandas as pd
 
+from rdchiral import main as rdc
+
 from aizynthfinder.chem import TemplatedRetroReaction
 from aizynthfinder.utils.models import load_model
 from aizynthfinder.utils.logging import logger
