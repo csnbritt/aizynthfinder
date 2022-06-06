@@ -44,11 +44,11 @@ class Molecule:
         if rd_mol:
             self.rd_mol = rd_mol
             self.smiles = Chem.MolToSmiles(rd_mol)
-            self.rct = rdc.rdchiralReactants(self.smiles)
+            self.rdc_rct = rdc.rdchiralReactants(self.smiles)
         else:
             self.smiles = smiles
             self.rd_mol = Chem.MolFromSmiles(smiles, sanitize=False)
-            self.rct = rdc.rdchiralReactants(self.smiles)
+            self.rdc_rct = rdc.rdchiralReactants(self.smiles)
 
         self._inchi_key: Optional[str] = None
         self._inchi: Optional[str] = None
