@@ -102,7 +102,7 @@ class TemplateBasedExpansionStrategy(ExpansionStrategy):
             reaction = rdc.rdchiralReaction(row['retro_template'])
             encoded_template.append(reaction)
             i += 1
-        self.templates['reaction'] = encoded_template
+        self.templates['rdc_rxn'] = encoded_template
         self.predictions_saved = pd.DataFrame(columns=['SMILES', 'ID', 'Probability'])
 
         if hasattr(self.model, "output_size") and len(self.templates) != self.model.output_size:  # type: ignore
